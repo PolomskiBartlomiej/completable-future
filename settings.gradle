@@ -1,0 +1,6 @@
+
+include 'client'
+include 'slow-service'
+
+
+rootProject.name = 'complatable-future'
