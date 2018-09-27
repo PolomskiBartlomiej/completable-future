@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 @Component
-class NbpTableResolver {
+public class NbpTableResolver {
 
     private static final Map<String,String>TABLE_A =
             ImmutableMap.<String,String>builder()
@@ -41,7 +41,7 @@ class NbpTableResolver {
             .build();
 
 
-    String resolve(String currency) {
+    public String resolve(String currency) {
        return Stream.of(TABLE_A,TABLE_B,TABLE_C)
                 .filter(map -> map.containsKey(currency))
                 .findAny()

@@ -5,23 +5,20 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Value;
 
+import java.util.LinkedList;
 import java.util.List;
 
 @Value
-public class ExchangeRatesSeries implements RateInfo {
+public class ExchangeRatesSeries {
     @JsonProperty
     String code;
+
     @JsonProperty
     @Getter(AccessLevel.NONE)
     List<RateDto> rates;
 
-    @Override
-    public String code() {
-        return code;
+    public List<RateDto> rates() {
+        return new LinkedList<>((rates));
     }
 
-    @Override
-    public Double rate() {
-       return rates.get(0).getMid();
-    }
 }

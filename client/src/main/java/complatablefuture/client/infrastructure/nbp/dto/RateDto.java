@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Value;
 
 @Value
-class RateDto {
+public class RateDto {
     @JsonProperty
     Double bid;
     @JsonProperty
