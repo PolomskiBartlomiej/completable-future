@@ -38,6 +38,7 @@ public class NbpTableResolver {
             .put("czk","c")
             .put("dkk","c")
             .put("nok","c")
+            .put("pgb","c") // Throws HttpClientErrorException : 404 Not Found
             .build();
 
 

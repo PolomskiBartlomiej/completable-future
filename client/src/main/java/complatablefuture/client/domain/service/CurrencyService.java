@@ -8,7 +8,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 import static complatablefuture.client.infrastructure.future.FutureUtil.tryJoinOrThrow;
 import static java.util.concurrent.CompletableFuture.allOf;
@@ -40,19 +42,7 @@ public class CurrencyService {
 
         List<CompletableFuture<Rate>> futures = currencies.stream()
                 .map(bank::rate)
-                .map(future -> future.handle(
-                        (rate, ex) -> {
-                            if (ex == null) {
-                                return  rate;
-                            }
-
-                            if (ex instanceof HttpClientErrorException) {
-                                return null;
-                            }
-
-                            throw new RuntimeException();
-                        }
-                ))
+                .map(this::handleClientError)
                 .collect(toList());
 
         CompletableFuture<Void> allOfFuture = allOf(futures.toArray(new CompletableFuture[0]));
@@ -61,6 +51,18 @@ public class CurrencyService {
 
         return futures.stream()
                 .map(CompletableFuture::join)
+                .filter(Objects::nonNull)
                 .collect(toList());
+    }
+
+    private CompletableFuture<Rate> handleClientError(CompletableFuture<Rate> future) {
+        return future.exceptionally(
+                (ex) -> {
+                    if (ex.getCause() instanceof HttpClientErrorException) {
+                        return null;
+                    }
+                    throw (CompletionException) ex;
+                }
+        );
     }
 }
