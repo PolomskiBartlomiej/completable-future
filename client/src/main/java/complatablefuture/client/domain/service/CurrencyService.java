@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.stream.Stream;
 
 import static complatablefuture.client.infrastructure.future.FutureUtil.tryJoinOrThrow;
 import static java.util.concurrent.CompletableFuture.allOf;
@@ -24,15 +25,14 @@ public class CurrencyService {
 
     public List<Rate> actualRate(List<String> currencies) {
 
-        List<CompletableFuture<Rate>> futures = currencies.stream()
-                .map(bank::rate)
-                .collect(toList());
+        Stream<CompletableFuture<Rate>> futures = currencies.stream()
+                                                            .map(bank::rate);
 
-        CompletableFuture<Void> allOfFuture = allOf(futures.toArray(new CompletableFuture[0]));
+        CompletableFuture<Void> allOfFuture = allOf(futures.toArray(CompletableFuture[]::new));
 
         tryJoinOrThrow(allOfFuture , RateException::new);
 
-        return futures.stream()
+        return futures
                 .map(CompletableFuture::join)
                 .collect(toList());
 
@@ -40,29 +40,24 @@ public class CurrencyService {
 
     public List<Rate> todayRate(List<String> currencies) {
 
-        List<CompletableFuture<Rate>> futures = currencies.stream()
+        Stream<CompletableFuture<Rate>> futures = currencies.stream()
                 .map(bank::rate)
-                .map(this::handleClientError)
-                .collect(toList());
+                .map(this::handleClientError);
 
-        CompletableFuture<Void> allOfFuture = allOf(futures.toArray(new CompletableFuture[0]));
+        CompletableFuture<Void> allOfFuture = allOf(futures.toArray(CompletableFuture[]::new));
 
         tryJoinOrThrow(allOfFuture , RateException::new);
 
-        return futures.stream()
+        return futures
                 .map(CompletableFuture::join)
                 .filter(Objects::nonNull)
                 .collect(toList());
     }
 
     private CompletableFuture<Rate> handleClientError(CompletableFuture<Rate> future) {
-        return future.exceptionally(
-                (ex) -> {
-                    if (ex.getCause() instanceof HttpClientErrorException) {
-                        return null;
-                    }
-                    throw (CompletionException) ex;
-                }
-        );
+        return future.exceptionally(ex -> {
+            if (ex.getCause() instanceof HttpClientErrorException ) return null;
+            throw (CompletionException) ex;
+        });
     }
 }
