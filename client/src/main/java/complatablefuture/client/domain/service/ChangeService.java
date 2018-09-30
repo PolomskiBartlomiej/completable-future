@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
 
 import static complatablefuture.client.infrastructure.future.FutureUtil.tryJoinOrThrow;
 import static java.util.concurrent.CompletableFuture.allOf;
@@ -24,17 +23,19 @@ public class ChangeService {
 
     public List<Change> change(BigDecimal amount, List<String> currencyCodes) {
 
-        Stream<CompletableFuture<Change>> changes = currencyCodes.stream()
+        List<CompletableFuture<Change>> changes = currencyCodes.stream()
                 .map(code -> bankApi.rate(code)
-                    .thenApply(rate -> changeCalculator.calculate(rate, amount)));
+                                    .thenApply(rate -> changeCalculator.calculate(rate, amount)))
+                .collect(toList());
 
 
-        CompletableFuture<Void> allOfFuture = allOf(changes.toArray(CompletableFuture[]::new));
+        CompletableFuture<Void> allOfFuture = allOf(changes.toArray(new CompletableFuture[0]));
 
         tryJoinOrThrow(allOfFuture, RateException::new);
 
-        return changes
+        return changes.stream()
                 .map(CompletableFuture::join)
                 .collect(toList());
+
     }
 }

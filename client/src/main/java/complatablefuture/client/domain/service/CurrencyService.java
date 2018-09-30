@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
-import java.util.stream.Stream;
 
 import static complatablefuture.client.infrastructure.future.FutureUtil.tryJoinOrThrow;
 import static java.util.concurrent.CompletableFuture.allOf;
@@ -25,14 +24,16 @@ public class CurrencyService {
 
     public List<Rate> actualRate(List<String> currencies) {
 
-        Stream<CompletableFuture<Rate>> futures = currencies.stream()
-                                                            .map(bank::rate);
+        List<CompletableFuture<Rate>> futures = currencies.stream()
+                                                            .map(bank::rate)
+                                                            .collect(toList());
 
-        CompletableFuture<Void> allOfFuture = allOf(futures.toArray(CompletableFuture[]::new));
+        CompletableFuture<Void> allOfFuture = allOf(futures.toArray(new CompletableFuture[0]));
 
         tryJoinOrThrow(allOfFuture , RateException::new);
 
         return futures
+                .stream()
                 .map(CompletableFuture::join)
                 .collect(toList());
 
@@ -40,15 +41,17 @@ public class CurrencyService {
 
     public List<Rate> todayRate(List<String> currencies) {
 
-        Stream<CompletableFuture<Rate>> futures = currencies.stream()
+        List<CompletableFuture<Rate>> futures = currencies.stream()
                 .map(bank::rate)
-                .map(this::handleClientError);
+                .map(this::handleClientError)
+                .collect(toList());
 
-        CompletableFuture<Void> allOfFuture = allOf(futures.toArray(CompletableFuture[]::new));
+        CompletableFuture<Void> allOfFuture = allOf(futures.toArray(new CompletableFuture[0]));
 
         tryJoinOrThrow(allOfFuture , RateException::new);
 
         return futures
+                .stream()
                 .map(CompletableFuture::join)
                 .filter(Objects::nonNull)
                 .collect(toList());

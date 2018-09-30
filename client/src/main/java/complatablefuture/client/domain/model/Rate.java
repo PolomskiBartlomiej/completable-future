@@ -1,7 +1,6 @@
 package complatablefuture.client.domain.model;
 
-import lombok.Builder;
-import lombok.Value;
+import lombok.*;
 
 import java.math.BigDecimal;
 

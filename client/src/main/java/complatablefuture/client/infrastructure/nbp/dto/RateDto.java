@@ -3,12 +3,14 @@ package complatablefuture.client.infrastructure.nbp.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Value;
 
+import java.math.BigDecimal;
+
 @Value
 public class RateDto {
     @JsonProperty
-    Double bid;
+    BigDecimal bid;
     @JsonProperty
-    Double ask;
+    BigDecimal ask;
     @JsonProperty
-    Double mid;
+    BigDecimal mid;
 }
